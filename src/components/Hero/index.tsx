@@ -1,4 +1,5 @@
 import Image from "next/image";
+import Link from "next/link";
 
 const Hero = () => {
   return (
@@ -25,12 +26,12 @@ const Hero = () => {
                 </p>
                 <ul className="mb-10 flex flex-wrap items-center justify-center lg:justify-start gap-5">
                   <li>
-                    <a
-                      href={`${process.env.FRONTEND_APP_URL}/rescue-abandoned-animal`}
+                    <Link
+                      href="/save-friend"
                       className="inline-flex items-center justify-center rounded-md bg-white px-7 py-[14px] text-center text-base font-medium text-dark shadow-1 transition duration-300 ease-in-out hover:bg-gray-2"
                     >
                       Salva a un Amigo
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>
