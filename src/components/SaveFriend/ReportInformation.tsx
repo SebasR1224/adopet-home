@@ -2,6 +2,14 @@ import { Report } from "@/types/report";
 import { CardTitle } from "./CardTitle";
 import { ImageUploader } from "../ImageUploader";
 
+const abandonmentStatusOptions = [
+  { value: "Critical", label: "Crítico" },
+  { value: "High", label: "Alto" },
+  { value: "Medium", label: "Medio" },
+  { value: "Low", label: "Bajo" },
+  { value: "NonCritical", label: "No crítico" },
+];
+
 export const ReportInformation = ({
   formData,
   handleChange,
@@ -57,15 +65,18 @@ export const ReportInformation = ({
           required
         >
           <option value="">Selecciona una opción</option>
-          <option value="Critical">Crítico</option>
-          <option value="Urgent">Urgente</option>
-          <option value="Normal">Normal</option>
+          {abandonmentStatusOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
         </select>
         <div className="col-span-2">
           <ImageUploader
             multiple={true}
             maxImages={5}
             onImagesUpload={handleReportImagesUpload}
+            initialImages={formData.images || []}
           />
         </div>
       </div>

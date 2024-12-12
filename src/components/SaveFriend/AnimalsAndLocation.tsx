@@ -2,6 +2,14 @@ import { Location, Report } from "@/types/report";
 import { LocationPicker } from "../Map/LocationPicker";
 import { CardTitle } from "./CardTitle";
 import { ImageUploader } from "../ImageUploader";
+import { ConfigService } from "@/api/services/configService";
+import { useEffect, useState } from "react";
+import { Breed, Species } from "@/api/models/config";
+
+const genderOptions = [
+  { value: "MALE", label: "Macho" },
+  { value: "FEMALE", label: "Hembra" },
+];
 
 export const AnimalsAndLocation = ({
   formData,
@@ -23,6 +31,26 @@ export const AnimalsAndLocation = ({
   handleLocationSelect: (location: Location) => void;
   handleAnimalImageUpload: (index: number, urls: string[]) => void;
 }) => {
+  const [species, setSpecies] = useState<Species[]>([]);
+
+  useEffect(() => {
+    const fetchSpecies = async () => {
+      try {
+        const response = await ConfigService.getSpecies();
+        setSpecies(response);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    };
+
+    fetchSpecies();
+  }, []);
+
+  const getBreedsBySpecieId = (specieValue: string): Breed[] => {
+    const selectedSpecie = species.find(s => s.value === specieValue);
+    return selectedSpecie?.breeds || [];
+  };
+
   return (
     <div>
       <CardTitle
@@ -60,9 +88,9 @@ export const AnimalsAndLocation = ({
               value={animal.name || ""}
               onChange={(e) => handleAnimalChange(index, e)}
               placeholder="Nombre del animal (opcional)"
-              className="w-full p-2 border rounded"
+              className="w-full p-2 border rounded col-span-2"
             />
-            <select
+             <select
               name="specie"
               value={animal.specie}
               onChange={(e) => handleAnimalChange(index, e)}
@@ -70,18 +98,26 @@ export const AnimalsAndLocation = ({
               required
             >
               <option value="">Selecciona especie</option>
-              <option value="dog">Perro</option>
-              <option value="cat">Gato</option>
-              <option value="other">Otro</option>
+              {species.map((specie) => (
+                <option key={specie.id} value={specie.value}>
+                  {specie.value}
+                </option>
+              ))}
             </select>
-            <input
-              type="text"
-              name="breed"
-              value={animal.breed || ""}
-              onChange={(e) => handleAnimalChange(index, e)}
-              placeholder="Raza (opcional)"
-              className="w-full p-2 border rounded"
-            />
+             <select
+            name="breed"
+            value={animal.breed || ""}
+            onChange={(e) => handleAnimalChange(index, e)}
+            className="w-full p-2 border rounded"
+            disabled={!animal.specie}
+          >
+            <option value="">Selecciona raza</option>
+            {animal.specie && getBreedsBySpecieId(animal.specie).map((breed) => (
+              <option key={breed.id} value={breed.id}>
+                {breed.value}
+              </option>
+            ))}
+          </select>
             <select
               name="gender"
               value={animal.gender}
@@ -90,8 +126,11 @@ export const AnimalsAndLocation = ({
               required
             >
               <option value="">Selecciona género</option>
-              <option value="MALE">Macho</option>
-              <option value="FEMALE">Hembra</option>
+              {genderOptions.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
             </select>
             <input
               type="number"
@@ -99,6 +138,15 @@ export const AnimalsAndLocation = ({
               value={animal.age}
               onChange={(e) => handleAnimalChange(index, e)}
               placeholder="Edad (opcional)"
+              className="w-full p-2 border rounded"
+              required
+            />
+            <input
+              type="number"
+              name="weight"
+              value={animal.weight}
+              onChange={(e) => handleAnimalChange(index, e)}
+              placeholder="Peso (opcional)"
               className="w-full p-2 border rounded"
               required
             />
@@ -124,6 +172,8 @@ export const AnimalsAndLocation = ({
               <ImageUploader
                 multiple={false}
                 onImagesUpload={(urls) => handleAnimalImageUpload(index, urls)}
+                label={`animal-${index}`}
+                initialImages={animal.image ? [animal.image] : []}
               />
             </div>
           </div>
@@ -140,8 +190,8 @@ export const AnimalsAndLocation = ({
       <LocationPicker
         onLocationSelect={handleLocationSelect}
         initialLocation={{
-          latitude: formData.location.latitude || -34.6037,
-          longitude: formData.location.longitude || -58.3816,
+          latitude: formData.location.latitude || 4.809669,
+          longitude: formData.location.longitude || -74.354146,
         }}
       />
     </div>

@@ -25,13 +25,10 @@ const mapContainerStyle = {
 
 export const LocationPicker = ({
   onLocationSelect,
-  initialLocation = {
-    latitude: -34.6037,
-    longitude: -58.3816,
-  },
+  initialLocation,
 }: {
   onLocationSelect: (location: Location) => void;
-  initialLocation?: { latitude: number; longitude: number };
+  initialLocation: { latitude: number; longitude: number };
 }) => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,

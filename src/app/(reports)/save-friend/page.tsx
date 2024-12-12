@@ -1,4 +1,5 @@
 "use client";
+import { ReportAbandonmentService } from "@/api/services/reportAbandonmentService";
 import { AnimalsAndLocation } from "@/components/SaveFriend/AnimalsAndLocation";
 import { NavigationControls } from "@/components/SaveFriend/NavigationControls";
 import { ReporterInformation } from "@/components/SaveFriend/ReporterInformation";
@@ -7,11 +8,17 @@ import { ReviewInformation } from "@/components/SaveFriend/ReviewInformation";
 import { StepIndicator } from "@/components/SaveFriend/StepIndicator";
 import { initialFormData } from "@/constants/initialFormData";
 import { Location, Report } from "@/types/report";
+import { validateAnimalsAndLocation, validateReporterInformation, validateReportInformation } from "@/utils/formValidations";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
+import toast, { Toaster } from 'react-hot-toast';
 
 export default function SaveFriend() {
+  const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [formData, setFormData] = useState(initialFormData);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [submitErrors, setSubmitErrors] = useState<string[]>([]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -93,7 +100,7 @@ export default function SaveFriend() {
       const updatedAnimals = [...prev.animals];
       updatedAnimals[index] = {
         ...updatedAnimals[index],
-        image: urls[0], // Asumiendo que para animales solo se sube una imagen
+        image: urls[0],
       };
       return { ...prev, animals: updatedAnimals };
     });
@@ -109,34 +116,58 @@ export default function SaveFriend() {
     }));
   };
 
+  const validateCurrentStep = (): boolean => {
+    let stepErrors: string[] = [];
+
+    switch (currentStep) {
+      case 1:
+        stepErrors = validateReportInformation(formData);
+        break;
+      case 2:
+        stepErrors = validateAnimalsAndLocation(formData);
+        break;
+      case 3:
+        stepErrors = validateReporterInformation(formData);
+        break;
+    }
+
+    setErrors(stepErrors);
+    return stepErrors.length === 0;
+  };
+
   const nextStep = () => {
-    if (currentStep < 4) {
-      setCurrentStep(currentStep + 1);
+    if (validateCurrentStep()) {
+      if (currentStep < 4) {
+        setCurrentStep(currentStep + 1);
+        setErrors([]);
+      }
     }
   };
 
   const prevStep = () => {
     if (currentStep > 1) {
       setCurrentStep(currentStep - 1);
+      setErrors([]);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const response = await fetch("/api/reports", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+    setSubmitErrors([]);
 
-      if (response.ok) {
-        alert("Reporte enviado exitosamente");
-      }
+    try {
+      await ReportAbandonmentService.createReport(formData);
+      toast.success('¡Reporte creado exitosamente!');
+      setTimeout(() => {
+        router.push('/');
+      }, 1500);
+      setFormData(initialFormData);
+      setCurrentStep(1);
     } catch (error) {
-      console.error("Error al enviar el reporte:", error);
+      if (error instanceof Error) {
+        setSubmitErrors([error.message]);
+        toast.error('Error al crear el reporte');
+      }
     }
   };
 
@@ -177,10 +208,31 @@ export default function SaveFriend() {
 
   return (
     <div className="min-h-screen bg-gray-100 dark:bg-dark flex items-center justify-center p-6 pt-20">
+      <Toaster position="top-right" />
       <div className="bg-white dark:bg-dark-700 shadow-md rounded-lg w-full max-w-6xl p-6">
         <StepIndicator currentStep={currentStep} />
 
         <form onSubmit={handleSubmit}>
+           {(errors.length > 0 || submitErrors.length > 0) && (
+            <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+              <p className="text-red-600 font-medium mb-2">
+                Por favor corrige los siguientes errores:
+              </p>
+              <ul className="list-disc list-inside">
+                {errors.map((error, index) => (
+                  <li key={`validation-${index}`} className="text-red-500">
+                    {error}
+                  </li>
+                ))}
+                {submitErrors.map((error, index) => (
+                  <li key={`submit-${index}`} className="text-red-500">
+                    {error}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
           {renderStep()}
 
           <NavigationControls
