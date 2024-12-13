@@ -19,7 +19,7 @@ export const NavigationControls = ({
         </button>
       )}
 
-      {currentStep < 4 && (
+      {currentStep < 5 && (
         <button
           type="button"
           className="inline-flex items-center justify-center rounded-md bg-primary px-7 py-3 text-center text-base font-medium text-white duration-300 hover:bg-primary/90"
@@ -29,7 +29,7 @@ export const NavigationControls = ({
         </button>
       )}
 
-      {currentStep === 4 && (
+      {currentStep === 5 && (
         <button
           type="submit"
           className="ml-auto flex items-center bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600"

@@ -26,7 +26,7 @@ export const ReviewInformation = ({ formData }: { formData: Report }) => {
         </div>
         <div>
           <strong>Ubicación:</strong> {formData.location.address},{" "}
-          {formData.location.city}, {formData.location.postalCode}
+          {formData.location.postalCode}
         </div>
         <div>
           <strong>Fecha y hora del abandono:</strong>{" "}

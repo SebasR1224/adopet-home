@@ -26,7 +26,7 @@ export const validateReportInformation = (formData: Report): string[] => {
   return errors;
 };
 
-export const validateAnimalsAndLocation = (formData: Report): string[] => {
+export const validateAnimalInformation = (formData: Report): string[] => {
   const errors: string[] = [];
 
   if (!formData.animals.length) {
@@ -49,9 +49,23 @@ export const validateAnimalsAndLocation = (formData: Report): string[] => {
     }
   });
 
-  /*if (!formData.location.latitude || !formData.location.longitude) {
+  return errors;
+};
+
+export const validateLocationInformation = (formData: Report): string[] => {
+  const errors: string[] = [];
+
+  if (!formData.location.latitude || !formData.location.longitude) {
     errors.push("Debe seleccionar una ubicación en el mapa");
-  }*/
+  }
+
+  if (!formData.location.city) {
+    errors.push("Debe agregar una ciudad");
+  }
+
+  if (!formData.location.address) {
+    errors.push("Debe agregar una dirección");
+  }
 
   return errors;
 };

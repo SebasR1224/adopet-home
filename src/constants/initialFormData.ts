@@ -25,11 +25,11 @@ export const initialFormData: Report = {
     },
   ],
   location: {
-    latitude: 4.809669,
-    longitude: -74.354146,
-    address: "Av. 9 de Julio 1190",
-    city: "Buenos Aires",
-    postalCode: "C1000",
+    latitude: 0,
+    longitude: 0,
+    address: "",
+    city: "",
+    postalCode: "",
   },
   abandonmentDateTime: new Date().toISOString(),
 };

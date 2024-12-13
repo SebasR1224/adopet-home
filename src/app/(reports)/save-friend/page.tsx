@@ -1,6 +1,7 @@
 "use client";
 import { ReportAbandonmentService } from "@/api/services/reportAbandonmentService";
-import { AnimalsAndLocation } from "@/components/SaveFriend/AnimalsAndLocation";
+import { AnimalInformation } from "@/components/SaveFriend/AnimalInformation";
+import { LocationInformation } from "@/components/SaveFriend/Location";
 import { NavigationControls } from "@/components/SaveFriend/NavigationControls";
 import { ReporterInformation } from "@/components/SaveFriend/ReporterInformation";
 import { ReportInformation } from "@/components/SaveFriend/ReportInformation";
@@ -8,9 +9,9 @@ import { ReviewInformation } from "@/components/SaveFriend/ReviewInformation";
 import { StepIndicator } from "@/components/SaveFriend/StepIndicator";
 import { initialFormData } from "@/constants/initialFormData";
 import { Location, Report } from "@/types/report";
-import { validateAnimalsAndLocation, validateReporterInformation, validateReportInformation } from "@/utils/formValidations";
+import { validateAnimalInformation, validateLocationInformation, validateReporterInformation, validateReportInformation } from "@/utils/formValidations";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import toast, { Toaster } from 'react-hot-toast';
 
 export default function SaveFriend() {
@@ -106,7 +107,8 @@ export default function SaveFriend() {
     });
   };
 
-  const handleLocationSelect = (location: Location) => {
+  const handleLocationSelect = useCallback((location: Location) => {
+    console.log(location);
     setFormData((prev) => ({
       ...prev,
       location: {
@@ -114,7 +116,7 @@ export default function SaveFriend() {
         ...location,
       },
     }));
-  };
+  }, []);
 
   const validateCurrentStep = (): boolean => {
     let stepErrors: string[] = [];
@@ -124,9 +126,12 @@ export default function SaveFriend() {
         stepErrors = validateReportInformation(formData);
         break;
       case 2:
-        stepErrors = validateAnimalsAndLocation(formData);
+        stepErrors = validateAnimalInformation(formData);
         break;
       case 3:
+        stepErrors = validateLocationInformation(formData);
+        break;
+      case 4:
         stepErrors = validateReporterInformation(formData);
         break;
     }
@@ -137,7 +142,7 @@ export default function SaveFriend() {
 
   const nextStep = () => {
     if (validateCurrentStep()) {
-      if (currentStep < 4) {
+      if (currentStep < 5) {
         setCurrentStep(currentStep + 1);
         setErrors([]);
       }
@@ -183,23 +188,29 @@ export default function SaveFriend() {
         );
       case 2:
         return (
-          <AnimalsAndLocation
+          <AnimalInformation
             formData={formData}
             handleAddAnimal={handleAddAnimal}
             handleRemoveAnimal={handleRemoveAnimal}
             handleAnimalChange={handleAnimalChange}
-            handleLocationSelect={handleLocationSelect}
             handleAnimalImageUpload={handleAnimalImageUpload}
           />
         );
-      case 3:
+        case 3:
+          return (
+            <LocationInformation
+              formData={formData}
+              handleLocationSelect={handleLocationSelect}
+            />
+          )
+      case 4:
         return (
           <ReporterInformation
             formData={formData}
             handleChange={handleChange}
           />
         );
-      case 4:
+      case 5:
         return <ReviewInformation formData={formData} />;
       default:
         return null;

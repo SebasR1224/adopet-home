@@ -1,5 +1,4 @@
-import { Location, Report } from "@/types/report";
-import { LocationPicker } from "../Map/LocationPicker";
+import { Report } from "@/types/report";
 import { CardTitle } from "./CardTitle";
 import { ImageUploader } from "../ImageUploader";
 import { ConfigService } from "@/api/services/configService";
@@ -11,12 +10,11 @@ const genderOptions = [
   { value: "FEMALE", label: "Hembra" },
 ];
 
-export const AnimalsAndLocation = ({
+export const AnimalInformation = ({
   formData,
   handleAddAnimal,
   handleRemoveAnimal,
   handleAnimalChange,
-  handleLocationSelect,
   handleAnimalImageUpload,
 }: {
   formData: Report;
@@ -28,7 +26,6 @@ export const AnimalsAndLocation = ({
       HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
     >
   ) => void;
-  handleLocationSelect: (location: Location) => void;
   handleAnimalImageUpload: (index: number, urls: string[]) => void;
 }) => {
   const [species, setSpecies] = useState<Species[]>([]);
@@ -113,7 +110,7 @@ export const AnimalsAndLocation = ({
           >
             <option value="">Selecciona raza</option>
             {animal.specie && getBreedsBySpecieId(animal.specie).map((breed) => (
-              <option key={breed.id} value={breed.id}>
+              <option key={breed.id} value={breed.value}>
                 {breed.value}
               </option>
             ))}
@@ -186,14 +183,6 @@ export const AnimalsAndLocation = ({
       >
         Añadir Animal
       </button>
-      <h3 className="text-xl font-bold mt-6 mb-4">Ubicación del Abandono</h3>
-      <LocationPicker
-        onLocationSelect={handleLocationSelect}
-        initialLocation={{
-          latitude: formData.location.latitude || 4.809669,
-          longitude: formData.location.longitude || -74.354146,
-        }}
-      />
     </div>
   );
 };

@@ -6,16 +6,8 @@ import {
   useLoadScript,
 } from "@react-google-maps/api";
 import { useCallback, useRef, useState } from "react";
-import Geocode from "react-geocode";
-
-interface AddressComponent {
-  long_name: string;
-  short_name: string;
-  types: string[];
-}
 
 const GOOGLE_MAPS_API_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "";
-console.log(GOOGLE_MAPS_API_KEY);
 
 const libraries: Libraries = ["places"];
 const mapContainerStyle = {
@@ -25,10 +17,8 @@ const mapContainerStyle = {
 
 export const LocationPicker = ({
   onLocationSelect,
-  initialLocation,
 }: {
   onLocationSelect: (location: Location) => void;
-  initialLocation: { latitude: number; longitude: number };
 }) => {
   const { isLoaded, loadError } = useLoadScript({
     googleMapsApiKey: GOOGLE_MAPS_API_KEY,
@@ -36,37 +26,88 @@ export const LocationPicker = ({
   });
 
   const [markerPosition, setMarkerPosition] = useState({
-    lat: initialLocation.latitude,
-    lng: initialLocation.longitude,
+    lat: 0,
+    lng: 0,
   });
 
   const mapRef = useRef<google.maps.Map | null>(null);
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
-  }, []);
+
+    // Obtener la ubicación actual después de que el mapa esté cargado
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setMarkerPosition({ lat: latitude, lng: longitude });
+
+          try {
+            const geocoder = new google.maps.Geocoder();
+            const response = await geocoder.geocode({
+              location: { lat: latitude, lng: longitude }
+            });
+
+            if (response.results[0]) {
+              const address = response.results[0].formatted_address;
+              const addressComponents = response.results[0].address_components;
+
+              const cityComponent = addressComponents.find(
+                component => component.types.includes("locality")
+              );
+              const postalCodeComponent = addressComponents.find(
+                component => component.types.includes("postal_code")
+              );
+
+              onLocationSelect({
+                latitude,
+                longitude,
+                address: address,
+                city: cityComponent ? cityComponent.long_name : "",
+                postalCode: postalCodeComponent ? postalCodeComponent.long_name : "",
+              });
+            }
+          } catch (error) {
+            console.error("Error al obtener la dirección inicial:", error);
+            onLocationSelect({
+              latitude,
+              longitude,
+              address: "",
+              city: "",
+              postalCode: "",
+            });
+          }
+        },
+        (error) => {
+          console.error("Error obteniendo la ubicación:", error);
+        }
+      );
+    }
+  }, [onLocationSelect]);
 
   const handleMapClick = useCallback(
-    (event: google.maps.MapMouseEvent) => {
+    async (event: google.maps.MapMouseEvent) => {
       const lat = event.latLng?.lat();
       const lng = event.latLng?.lng();
 
       if (lat && lng) {
         setMarkerPosition({ lat, lng });
 
-        Geocode.setKey(GOOGLE_MAPS_API_KEY);
-        Geocode.fromLatLng(lat, lng)
-          .then((response) => {
+        try {
+          const geocoder = new google.maps.Geocoder();
+          const response = await geocoder.geocode({
+            location: { lat, lng }
+          });
+
+          if (response.results[0]) {
             const address = response.results[0].formatted_address;
             const addressComponents = response.results[0].address_components;
 
             const cityComponent = addressComponents.find(
-              (component: AddressComponent) =>
-                component.types.includes("locality")
+              component => component.types.includes("locality")
             );
             const postalCodeComponent = addressComponents.find(
-              (component: AddressComponent) =>
-                component.types.includes("postal_code")
+              component => component.types.includes("postal_code")
             );
 
             onLocationSelect({
@@ -74,14 +115,12 @@ export const LocationPicker = ({
               longitude: lng,
               address: address,
               city: cityComponent ? cityComponent.long_name : "",
-              postalCode: postalCodeComponent
-                ? postalCodeComponent.long_name
-                : "",
+              postalCode: postalCodeComponent ? postalCodeComponent.long_name : "",
             });
-          })
-          .catch((error) => {
-            console.error("Error al obtener la dirección:", error);
-          });
+          }
+        } catch (error) {
+          console.error("Error al obtener la dirección:", error);
+        }
       }
     },
     [onLocationSelect]
